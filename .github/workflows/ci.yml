@@ -37,12 +37,14 @@ jobs:
         run: black --check nb_runtype
       
       - name: Check import sorting with isort
+        if: matrix.python-version != '3.8'
         run: isort --check-only nb_runtype
       
       - name: Check notebook formatting with black
         run: nbqa black --check tests
       
       - name: Check notebook import sorting with isort
+        if: matrix.python-version != '3.8'
         run: nbqa isort --check-only tests
       
       - name: Run notebook tests with nbmake
