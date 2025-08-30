@@ -9,8 +9,8 @@ description = "nb-runtype: Automatic runtime type validation for functions in Ju
 authors = [
     { name = "Mattia Passeri", email = "mattia.passeri2@studio.unibo.it" }
 ]
-license = "MIT"
-readme = "README.md"
+license = { text = "MIT" }
+readme = { file = "README.md" }
 requires-python = ">=3.8"
 dependencies = [
     "pydantic>=2.0",
