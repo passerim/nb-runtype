@@ -21,23 +21,45 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Upgrade pip and install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel build
+      
       - name: Download build artifacts from CI workflow
+        id: download_artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true  # Allow failure to proceed to fallback
         with:
           name: dist-files
           path: dist/
       
-      - name: Verify downloaded artifacts
+      - name: Build package if artifacts not found
+        if: steps.download_artifacts.outcome == 'failure'
+        run: |
+          echo "Artifact download failed, building package locally..."
+          python -m build
+          if [ ! -d dist ] || [ -z "$(ls -A dist)" ]; then
+            echo "Build failed or no artifacts produced"
+            exit 1
+          fi
+
+      - name: Verify artifacts
         run: |
           echo "=== Release artifacts ==="
           ls -la dist/
-          
           echo "=== Artifact details ==="
           for file in dist/*; do
             if [[ -f "$file" ]]; then
               echo "📦 $(basename "$file") - $(du -h "$file" | cut -f1)"
             fi
-          done
+          done    
       
       - name: Determine release information
         id: release_info
