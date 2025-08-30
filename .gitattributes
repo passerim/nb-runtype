@@ -1,0 +1,7 @@
+# Recommended settings for Unix/Linux systems
+* text=auto eol=lf
+
+# Force script and text files to use LF line endings
+*.sh text eol=lf
+*.toml text eol=lf
+*.md text eol=lf

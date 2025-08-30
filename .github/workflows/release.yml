@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download build artifacts from CI workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+      
+      - name: Verify downloaded artifacts
+        run: |
+          echo "=== Release artifacts ==="
+          ls -la dist/
+          
+          echo "=== Artifact details ==="
+          for file in dist/*; do
+            if [[ -f "$file" ]]; then
+              echo "📦 $(basename "$file") - $(du -h "$file" | cut -f1)"
+            fi
+          done
+      
+      - name: Determine release information
+        id: release_info
+        run: |
+          TAG_NAME="${{ inputs.tag_name || github.ref_name }}"
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release (Draft)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag_name }}
+          files: dist/*
+          generate_release_notes: true
+          draft: true

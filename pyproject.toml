@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nb-runtype"
+version = "0.1.0"
+description = "nb-runtype: Automatic runtime type validation for functions in Jupyter notebooks, with flexible configuration and per-function exclusion."
+authors = [
+    { name = "Mattia Passeri", email = "mattia.passeri2@studio.unibo.it" }
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pydantic>=2.0",
+    "IPython"
+]
+
+keywords = ["jupyter", "notebook", "type checking", "pydantic", "runtime", "validation", "ipython"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Framework :: Jupyter",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/passerim/nb-runtype"
+Repository = "https://github.com/passerim/nb-runtype"
+Documentation = "https://github.com/passerim/nb-runtype?tab=readme-ov-file#api-reference"
+Releases = "https://github.com/passerim/nb-runtype/releases"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "jupyter",
+    "nbmake",
+    "black",
+    "isort",
+    "nbqa",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_first_party = ["nb_runtype"]

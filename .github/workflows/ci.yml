@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  # Job 1: Test on all Python versions (in parallel)
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+              
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Upgrade pip and install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel build
+      
+      - name: Install dependencies (dev)
+        run: pip install -e '.[dev]'
+      
+      - name: Check code formatting with black
+        run: black --check nb_runtype
+      
+      - name: Check import sorting with isort
+        run: isort --check-only nb_runtype
+      
+      - name: Check notebook formatting with black
+        run: nbqa black --check tests
+      
+      - name: Check notebook import sorting with isort
+        run: nbqa isort --check-only tests
+      
+      - name: Run notebook tests with nbmake
+        run: pytest --nbmake tests
+
+  # Job 2: Build and verify (only if all tests pass)
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: test  # Depends on the success of the test job
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # Use a stable version for the build
+          cache: 'pip'
+      
+      - name: Upgrade pip and install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel build
+      
+      - name: Build package
+        run: python -m build
+      
+      - name: Verify build artifacts
+        run: |
+          echo "=== Build artifacts ==="
+          ls -la dist/
+          echo "=== Wheel info ==="
+          python -m wheel unpack dist/*.whl --dest /tmp/wheel_contents || echo "Could not unpack wheel"
+      
+      - name: Test wheel installation in isolated environment
+        run: |
+          echo "=== Testing isolated installation ==="
+          python -m venv test_env
+          source test_env/bin/activate
+          pip install dist/*.whl
+          python -c "from nb_runtype import enable_runtype, disable_runtype, no_runtype, is_runtype_enabled, get_runtype_config, RuntypeError; print('All imports successful')"
+          deactivate
+      
+      # Save build artifacts for other workflows (e.g. release)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+          retention-days: 7
